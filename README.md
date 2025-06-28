@@ -26,6 +26,20 @@ Link: https://github.com/TheWebDevel/n8n-wk3/blob/main/n8n-gmail-automation.json
 
 ![image](https://github.com/user-attachments/assets/d1140a2e-fead-4d43-a0f5-d1c58e1c6e1d)
 
+### ⚠️ PoC Dataset Caveat
+
+The `/api/v1/users` sample is inconsistent, so I adopted a pragmatic rule set to keep the demo clear:
+
+| What the dataset shows                                | How this PoC treats it                                                     | Examples from the list                                 |
+| ----------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **`role: admin`** + email *contains* `admin@`         | *On-call / ops crowd* → gets **ADMIN** alerts (outages, P1)                | `admin@mail.com`                                       |
+| **`role: admin`** + email *does NOT* contain `admin@` | *General internal team* → receives **CUSTOMER** queries (billing, feature) | `Diego@mail.com`, `Kaci33@yahoo.com`, `beko@gmail.com` |
+
+All other records (`role: customer`) represent actual customers and are **never e-mailed** by the workflow.
+
+> This split is speculative—chosen only to satisfy the filtering requirement with the messy data provided.
+
+
 ### Customer Demo
 https://github.com/user-attachments/assets/05da0916-e210-4faf-aae6-10dae0945f92
 
