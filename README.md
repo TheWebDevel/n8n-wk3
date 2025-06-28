@@ -20,6 +20,9 @@
 
 > **Flow:** chat in → AI decides → email fired → Jira raised → thread replied — that fast. 🎉
 
+### n8n Code/ Workflow
+Link: https://github.com/TheWebDevel/n8n-wk3/blob/main/n8n-gmail-automation.json
+
 
 ![image](https://github.com/user-attachments/assets/d1140a2e-fead-4d43-a0f5-d1c58e1c6e1d)
 
@@ -28,9 +31,6 @@ https://github.com/user-attachments/assets/05da0916-e210-4faf-aae6-10dae0945f92
 
 ### Admin Demo
 https://github.com/user-attachments/assets/31082cf8-189b-40b2-a89d-c32cf0a88b94
-
-### n8n Code/ Workflow
-Link: 
 
 
 
