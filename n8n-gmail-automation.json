@@ -1,0 +1,649 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.escuelajs.co/api/v1/users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -382,
+        1640
+      ],
+      "id": "fa2cf69b-9e95-407e-bc77-2a28e2629098",
+      "name": "HTTP Request",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -680,
+        940
+      ],
+      "id": "bb8f9833-7d55-476a-b1c2-9aae930f0af0",
+      "name": "Chat Input",
+      "webhookId": "265b9540-5343-42a6-8be5-a07664f052ec"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $('Chat Input').item.json.chatInput }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Customer",
+              "description": "Product Inquiry, General Support, Sales question, billing inquiry, and feature request."
+            },
+            {
+              "category": "Admin",
+              "description": "Technical Escalation, System Issue, Security Concern, Data Issue, and Integration Problem"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -460,
+        840
+      ],
+      "id": "a22d1d43-e396-4b37-ba3f-3cd840dcc176",
+      "name": "Text Classifier",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
+      "typeVersion": 1,
+      "position": [
+        -372,
+        1060
+      ],
+      "id": "66af4991-4091-45d1-8a48-8fd5c004a5b1",
+      "name": "Claude Classifier",
+      "credentials": {
+        "aws": {
+          "id": "xduoGR2u2UUaqLFu",
+          "name": "AWS account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -84,
+        1140
+      ],
+      "id": "fa2439f5-df9e-4cd3-9d59-3e3e8876f534",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6444c852-2008-4c37-b49c-7f9740c8a7ed",
+              "leftValue": "={{ $('HTTP Request').item.json.role }}",
+              "rightValue": "admin",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "48a99fa9-fa59-4623-8fb2-38e180dd7f1e",
+              "leftValue": "={{ $('HTTP Request').item.json.email }}",
+              "rightValue": "admin",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        136,
+        1140
+      ],
+      "id": "d7758888-7484-4eea-8cdd-eb0de17f9514",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -84,
+        1440
+      ],
+      "id": "575041e1-45d0-44ea-91c0-a6f7bc6abc63",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "806ab529-b0a4-4c3c-8061-df08fd3d44e6",
+              "leftValue": "={{ $('HTTP Request').item.json.role }}",
+              "rightValue": "admin",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d1db7dc6-2334-4e88-87fb-079f154d6d66",
+              "leftValue": "={{ $('HTTP Request').item.json.email }}",
+              "rightValue": "admin",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        136,
+        1440
+      ],
+      "id": "c7cede78-d531-4ad9-9688-04e37fce7274",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const emailList = $('Filter').all().map(item => item.json.email).join(';');\nconst chatInput = $('Chat Input').first().json.chatInput;\nconst htmlBody = $('Query HTML Summarizer').first().json.text\nconst classifier = $('Text Classifier').first().json.chatInput;\nconst subject = $('Query Subject').first().json.text\nconst textSummary = $('Query Summarizer').first().json.text\nconst type = \"Customer\";\nreturn [{ json: { emailList, chatInput, htmlBody, classifier, subject, textSummary, type } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        356,
+        1140
+      ],
+      "id": "98d887cd-23ce-4257-b754-9516a09a2a64",
+      "name": "Code",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.emailList }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.htmlBody || '' }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        576,
+        1390
+      ],
+      "id": "44d5da7a-c876-47d3-af03-79a55941d2a7",
+      "name": "Send a message",
+      "webhookId": "5c19aac7-7e84-4908-ae47-5dc6bb12cb35",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RpVfoU0sbRpwcOmB",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const emailList = $('Filter1').all().map(item => item.json.email).join(';');\nconst chatInput = $('Chat Input').first().json.chatInput;\nconst htmlBody = $('Query HTML Summarizer').first().json.text\nconst classifier = $('Text Classifier').first().json.chatInput;\nconst subject = $('Query Subject').first().json.text\nconst textSummary = $('Query Summarizer').first().json.text\nconst type = \"Admin\"\nreturn [{ json: { emailList, chatInput, htmlBody, classifier, subject, textSummary, type } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        356,
+        1440
+      ],
+      "id": "ce8d58ea-c292-4a40-8970-4c1ea606bdc8",
+      "name": "Code1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a subject-line generator for internal support tickets.  Input → the full request text.  Rules 1. Identify **Query Type**:      • CUSTOMER → Product Inquiry, General Support, Sales Question, Billing Inquiry, Feature Request      • ADMIN    → Technical Escalation, System Issue, Security Concern, Data Issue, Integration Problem      (If ambiguous, default to CUSTOMER.) 2. Detect urgency cues (“URGENT”, “P1”, “CRITICAL”, etc.). 3. Pinpoint the main topic (billing, duplicate charge, API outage, cache drift, security leak, feature request, etc.).      • Use 1–3 concise nouns/verbs—no whole sentences. 4. Compose a **single-line subject** in this pattern:      `[<Urgency?>] <Query Type> – <Main Topic>`      • Omit the urgency bracket if none.      • Use Title Case (capitalize principal words).      • Keep ≤ 80 characters total.      • No personal data (phone numbers, emails), no invoice numbers, no excess punctuation. 5. Output **only** that subject line string—nothing else."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -460,
+        40
+      ],
+      "id": "c3d4aa23-8a25-4d0a-ab59-b9c186cb2a55",
+      "name": "Query Subject"
+    },
+    {
+      "parameters": {
+        "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
+      "typeVersion": 1,
+      "position": [
+        -372,
+        260
+      ],
+      "id": "c20d99a2-b217-4d0c-a503-c473c31d4d31",
+      "name": "AWS Bedrock Chat Model1",
+      "credentials": {
+        "aws": {
+          "id": "xduoGR2u2UUaqLFu",
+          "name": "AWS account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a plain-text email builder for internal support routing.  Categories • CUSTOMER → Product Inquiry, General Support, Sales Question, Billing Inquiry, Feature Request • ADMIN    → Technical Escalation, System Issue, Security Concern, Data Issue, Integration Problem  Instructions 1. Read the request text. 2. Identify Query Type → CUSTOMER or ADMIN (match exactly; if unsure, default to CUSTOMER). 3. Extract Key Information → Query Type, urgency markers (“URGENT”, “P1”, etc.), product/service, invoice or ticket numbers, amounts, dates, contact details, systems affected. List only facts explicitly present or clearly inferable. 4. Compose the email for the support team:    - Intro line:      A new <Query Type> request/alert requires your attention:    - Key Information section: ASCII bullets (- ), wrapped to ≤ 72 chars per line.    - Request Text section: quote the exact, unaltered request. Prepend each line with > and preserve paragraph breaks with blank lines.    - Closing line:      Please triage and respond according to priority. 5. Formatting rules:    - Pure ASCII only—no HTML, Markdown, emojis, or smart quotes.    - Use blank lines to separate sections; no decorative borders.    - Maximum line width: 72 characters. 6. Output only the final plain-text email—no commentary, no extra lines."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -460,
+        440
+      ],
+      "id": "4356dd91-a4d0-47eb-aacc-be6c3a980847",
+      "name": "Query Summarizer"
+    },
+    {
+      "parameters": {
+        "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
+      "typeVersion": 1,
+      "position": [
+        -372,
+        660
+      ],
+      "id": "25ebdd7a-6976-4424-8ace-73606275c740",
+      "name": "AWS Bedrock Chat Model2",
+      "credentials": {
+        "aws": {
+          "id": "xduoGR2u2UUaqLFu",
+          "name": "AWS account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an HTML email builder for internal support routing.  Categories   • CUSTOMER → Product Inquiry, General Support, Sales Question, Billing Inquiry, Feature Request   • ADMIN    → Technical Escalation, System Issue, Security Concern, Data Issue, Integration Problem    Instructions   1. Read the request text.   2. Determine **Query Type** ← CUSTOMER or ADMIN (match the text to the categories above; if unsure, default to CUSTOMER).   3. Extract **Key Information**: Query Type, urgency markers (“URGENT”, “P1”, etc.), product/service, invoice or ticket numbers, money amounts, dates, contact details, systems affected.      • Present these as a bulleted list under the heading **Key Information**.      • Include only facts explicitly present or clearly inferable.   4. Compose the email body for the **support team** (never the requester):      • Intro: “A new &lt;Query Type&gt; request/alert requires your attention:”      • Insert the exact, unaltered request text (use `<br>` to preserve paragraphs) inside a `<blockquote>` with a dark-blue left border and light background.      • Closing: “Please triage and respond according to priority.”   5. Build a single `<table>` (max-width 600 px) with inline CSS only:      • Global `<table>` style: `margin:0 auto;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;border-collapse:collapse;width:100%;max-width:600px`      • Header row: `background:linear-gradient(90deg,#2563eb,#4787ff);color:#fff;font-weight:bold;padding:16px;font-size:18px` – text: **Support Routing Notice**      • “Key Information” row & “Request Text” row: `background:#f7f7f7;border-radius:6px;box-shadow:0 0 4px rgba(0,0,0,0.05);padding:12px`      • Footer row: `font-size:12px;color:#666;padding:12px;text-align:center` — **Automated Support Router**   6. **Minify** the final HTML: remove all line breaks, carriage returns, tabs, and extra spaces—return **one continuous string** (no `\\n`, no `\\r`), keeping spaces only where they’re required inside attribute values.   7. Output **only** that minified HTML string—no markdown fences, no commentary, no follow-up questions."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -460,
+        1240
+      ],
+      "id": "ec01bdb6-417f-4d90-9438-4b2013f918ca",
+      "name": "Query HTML Summarizer"
+    },
+    {
+      "parameters": {
+        "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
+      "typeVersion": 1,
+      "position": [
+        -372,
+        1460
+      ],
+      "id": "bd95085a-1b91-4732-bb20-76fb87979f84",
+      "name": "AWS Bedrock Chat Model3",
+      "credentials": {
+        "aws": {
+          "id": "xduoGR2u2UUaqLFu",
+          "name": "AWS account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "10000",
+          "mode": "list",
+          "cachedResultName": "SupportTicket"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "10003",
+          "mode": "list",
+          "cachedResultName": "Task"
+        },
+        "summary": "={{ $json.subject }}",
+        "additionalFields": {
+          "description": "={{ $json.textSummary }}"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        576,
+        1190
+      ],
+      "id": "99e9a244-77dc-4c48-8e98-47c6352b7b5b",
+      "name": "Create an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "bZGnJ3UB6U3ufS0Z",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.threadId }}",
+        "message": "=<!DOCTYPE html>\n<html>\n  <body style=\"margin:0;padding:0;background:#f5f7fa;font-family:Arial,Helvetica,sans-serif\">\n    <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;margin:20px auto;border-collapse:collapse;background:#ffffff;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.08)\">\n      <!-- Ticket header -->\n      <tr>\n        <td style=\"background:linear-gradient(90deg,#2563eb,#4787ff);color:#ffffff;font-weight:bold;font-size:20px;text-align:center;padding:20px;border-radius:8px 8px 0 0\">\n          {{$('Create an issue')?.first()?.json?.key}}\n        </td>\n      </tr>\n      <!-- Sub-text -->\n      <tr>\n        <td style=\"padding:18px 32px;font-size:14px;color:#333333;text-align:center\">\n          A new ticket has been created and logged in Jira.\n        </td>\n      </tr>\n      <!-- Jira button -->\n      <tr>\n        <td style=\"background:#f7f7f7;text-align:center;padding:32px;border-radius:0 0 8px 8px\">\n          <a href=\"https://sathishkumar0416.atlassian.net/jira/software/projects/DP/boards/1?selectedIssue={{$('Create an issue')?.first()?.json?.key}}\" style=\"display:inline-block;padding:14px 28px;background:#2563eb;color:#ffffff;text-decoration:none;font-size:15px;font-weight:bold;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.15)\">\n            Jira Ticket\n          </a>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        796,
+        1390
+      ],
+      "id": "b133520d-79cd-438c-8d4f-619de3ac6771",
+      "name": "Reply to a message",
+      "webhookId": "5c19aac7-7e84-4908-ae47-5dc6bb12cb35",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RpVfoU0sbRpwcOmB",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Chat Input": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query Subject",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query Summarizer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query HTML Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Claude Classifier": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AWS Bedrock Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Query Subject",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AWS Bedrock Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Query Summarizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AWS Bedrock Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Query HTML Summarizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an issue": {
+      "main": [
+        []
+      ]
+    },
+    "Reply to a message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "948c7834-c23c-402a-8ece-b83b23b7188b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e53cdcdbda0e86daddbee57a407a0f14083078b260b66f4c40dfd189b05ab4ec"
+  },
+  "id": "W1WxybQeTvJp718Z",
+  "tags": []
+}
