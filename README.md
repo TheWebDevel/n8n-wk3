@@ -46,6 +46,13 @@ https://github.com/user-attachments/assets/05da0916-e210-4faf-aae6-10dae0945f92
 ### Admin Demo
 https://github.com/user-attachments/assets/31082cf8-189b-40b2-a89d-c32cf0a88b94
 
+### Screenshots
+
+![Screenshot 2025-06-30 at 7 27 32 AM](https://github.com/user-attachments/assets/33bda2bc-b823-4fa9-ad56-d0467bd26e44)
+
+![Screenshot 2025-06-30 at 7 29 47 AM](https://github.com/user-attachments/assets/a4b9845b-10fb-4509-bd91-dd2bea78e9ac)
+
+![Screenshot 2025-06-30 at 7 28 42 AM](https://github.com/user-attachments/assets/2f4e5b59-4444-4d5c-931f-8cdf40804d3d)
 
 
 
